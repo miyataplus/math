@@ -327,6 +327,9 @@
             let centerY;
             let radius;
             
+            // 最後に設定された角度を保存する変数
+            let lastAngleValue = 0;
+            
             // キャンバスの中心と半径を計算する関数（レスポンシブ対応）
             function updateCanvasDimensions() {
                 const canvas = document.getElementById('unitCircle');
@@ -347,7 +350,7 @@
                 
                 // サイズが変わった場合は現在の角度で再描画
                 const angleIndex = parseInt(slider.value);
-                const angle = specialAngles[angleIndex];
+                const angle = specialAngles[angleIndex] || lastAngleValue;
                 draw(angle);
             }
             
@@ -357,7 +360,6 @@
             // ウィンドウサイズが変更されたときに再調整
             window.addEventListener('resize', function() {
                 updateCanvasDimensions();
-                draw(parseInt(slider.value));
             });
             
             // 描画関数の呼び出しを抑制するフラグ
@@ -403,6 +405,8 @@
                 const angleIndex = specialAngles.indexOf(angle);
                 if (angleIndex !== -1) {
                     slider.value = angleIndex;
+                    // 角度を保存
+                    lastAngleValue = angle;
                     // 最適化された描画関数を使用
                     optimizedDraw(angle);
                     return;
@@ -422,6 +426,8 @@
                 
                 const closestAngle = specialAngles[closestIndex];
                 slider.value = closestIndex;
+                // 角度を保存
+                lastAngleValue = closestAngle;
                 // 最適化された描画関数を使用
                 optimizedDraw(closestAngle);
             }
@@ -430,6 +436,8 @@
             slider.addEventListener('input', function() {
                 const angleIndex = parseInt(this.value);
                 const angle = specialAngles[angleIndex];
+                // 角度を保存
+                lastAngleValue = angle;
                 // 最適化された描画関数を使用
                 optimizedDraw(angle);
             });
@@ -468,14 +476,24 @@
             
             // ウィンドウのスクロールイベントを追加（モバイルでのスクロール時の修正）
             let scrollTimeout;
+            
+            // スライダーの値が変わったときに最後の角度を更新
+            slider.addEventListener('change', function() {
+                const angleIndex = parseInt(this.value);
+                lastAngleValue = specialAngles[angleIndex];
+            });
+            
             window.addEventListener('scroll', function() {
-                // スクロール中の多重実行を防止
+                // スクロール中は何もしない（スクロールだけでは角度を変更しない）
                 clearTimeout(scrollTimeout);
+                
+                // スクロール停止後、現在設定されている角度を再描画
                 scrollTimeout = setTimeout(function() {
-                    // スクロール停止後にスライダーの値から特殊角を強制的に再描画
+                    // スライダーの現在値から角度を取得
                     const angleIndex = parseInt(slider.value);
-                    const angle = specialAngles[angleIndex];
-                    // 通常の描画関数を使用（遅延実行なので最適化は不要）
+                    const angle = specialAngles[angleIndex] || lastAngleValue;
+                    
+                    // 通常の描画関数を使用
                     draw(angle);
                 }, 100);
             });
@@ -548,6 +566,8 @@
                     
                     // クリック時またはクリック可能距離内の場合のみ角度を更新
                     if (isClick) {
+                        // 角度を保存
+                        lastAngleValue = closestAngle;
                         updateAngle(closestAngle);
                     }
                 } else {
@@ -572,6 +592,8 @@
                             }
                         }
                         
+                        // 角度を保存
+                        lastAngleValue = closestAngle;
                         updateAngle(closestAngle);
                     }
                 }
@@ -617,6 +639,9 @@
                         closestAngle = specialAngles[i];
                     }
                 }
+                
+                // 角度を保存
+                lastAngleValue = closestAngle;
                 
                 // 特殊角に即座に更新（表示もすぐに更新）
                 updateAngle(closestAngle);
@@ -710,26 +735,25 @@
             
             // 描画関数
             function draw(angleInDegrees) {
-                // requestAnimationFrameを使用して描画を最適化
-                requestAnimationFrame(() => {
-                    // 角度が特殊角でなければ、最も近い特殊角に修正
-                    if (specialAngles.indexOf(angleInDegrees) === -1) {
-                        // 最も近い特殊角を見つける
-                        let closestAngle = specialAngles[0];
-                        let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
-                        
-                        for (let i = 1; i < specialAngles.length; i++) {
-                            const diff = Math.abs(specialAngles[i] - angleInDegrees);
-                            if (diff < minDiff) {
-                                minDiff = diff;
-                                closestAngle = specialAngles[i];
-                            }
+                // 角度が特殊角でなければ、最も近い特殊角に修正
+                if (specialAngles.indexOf(angleInDegrees) === -1) {
+                    // 最も近い特殊角を見つける
+                    let closestAngle = specialAngles[0];
+                    let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
+                    
+                    for (let i = 1; i < specialAngles.length; i++) {
+                        const diff = Math.abs(specialAngles[i] - angleInDegrees);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestAngle = specialAngles[i];
                         }
-                        
-                        angleInDegrees = closestAngle;
                     }
                     
-                    // 以降の処理は実際の描画処理
+                    angleInDegrees = closestAngle;
+                }
+                
+                // requestAnimationFrameを使用して描画を最適化
+                requestAnimationFrame(function() {
                     performDraw(angleInDegrees);
                 });
             }
@@ -961,8 +985,12 @@
                 ctx.fillText("斜辺", (centerX + point.x) / 2 - textOffsetX, (centerY + point.y) / 2 - textOffsetY);
             }
             
-            // 初期描画
-            draw(0);
+            // 初期化時に最後の角度値を設定（スライダーの初期値を使用）
+            const initialAngleIndex = parseInt(slider.value) || 0;
+            lastAngleValue = specialAngles[initialAngleIndex];
+            
+            // 初期描画（直接performDrawを呼び出して確実に描画）
+            performDraw(lastAngleValue);
         });
     </script>
 </body>
