@@ -360,13 +360,51 @@
                 draw(parseInt(slider.value));
             });
             
+            // 描画関数の呼び出しを抑制するフラグ
+            let isDrawingLocked = false;
+            
+            // 描画処理を最適化する関数
+            function optimizedDraw(angleInDegrees) {
+                // 描画ロックがかかっている場合は処理をスキップ
+                if (isDrawingLocked) return;
+                
+                // 短時間の連続描画を防止するために描画ロックをかける
+                isDrawingLocked = true;
+                
+                // 角度が特殊角でなければ、最も近い特殊角に修正
+                if (specialAngles.indexOf(angleInDegrees) === -1) {
+                    // 最も近い特殊角を見つける
+                    let closestAngle = specialAngles[0];
+                    let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
+                    
+                    for (let i = 1; i < specialAngles.length; i++) {
+                        const diff = Math.abs(specialAngles[i] - angleInDegrees);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestAngle = specialAngles[i];
+                        }
+                    }
+                    
+                    angleInDegrees = closestAngle;
+                }
+                
+                // 実際の描画処理
+                draw(angleInDegrees);
+                
+                // 短時間後に描画ロックを解除
+                setTimeout(() => {
+                    isDrawingLocked = false;
+                }, 50);
+            }
+            
             // 角度を更新する関数
             function updateAngle(angle) {
                 // 特殊角度配列のインデックスを見つける
                 const angleIndex = specialAngles.indexOf(angle);
                 if (angleIndex !== -1) {
                     slider.value = angleIndex;
-                    draw(angle);
+                    // 最適化された描画関数を使用
+                    optimizedDraw(angle);
                     return;
                 }
                 
@@ -384,14 +422,16 @@
                 
                 const closestAngle = specialAngles[closestIndex];
                 slider.value = closestIndex;
-                draw(closestAngle);
+                // 最適化された描画関数を使用
+                optimizedDraw(closestAngle);
             }
             
             // スライダーの値が変更されたときのイベントリスナー
             slider.addEventListener('input', function() {
                 const angleIndex = parseInt(this.value);
                 const angle = specialAngles[angleIndex];
-                draw(angle);
+                // 最適化された描画関数を使用
+                optimizedDraw(angle);
             });
             
             // キャンバスのクリックイベントリスナー
@@ -427,11 +467,17 @@
             }, { passive: false });
             
             // ウィンドウのスクロールイベントを追加（モバイルでのスクロール時の修正）
+            let scrollTimeout;
             window.addEventListener('scroll', function() {
-                // スクロール時にスライダーの値から特殊角を強制的に再描画
-                const angleIndex = parseInt(slider.value);
-                const angle = specialAngles[angleIndex];
-                draw(angle);
+                // スクロール中の多重実行を防止
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(function() {
+                    // スクロール停止後にスライダーの値から特殊角を強制的に再描画
+                    const angleIndex = parseInt(slider.value);
+                    const angle = specialAngles[angleIndex];
+                    // 通常の描画関数を使用（遅延実行なので最適化は不要）
+                    draw(angle);
+                }, 100);
             });
             
             // タッチエンドイベント後にも角度を正しく保つための処理
@@ -440,16 +486,15 @@
                 const angleIndex = parseInt(slider.value);
                 const angle = specialAngles[angleIndex];
                 
-                // 遅延を設けて角度を更新
-                setTimeout(function() {
-                    draw(angle);
-                    cursorGuide.style.display = 'none';
-                }, 100);
+                // カーソルガイドをすぐに非表示
+                cursorGuide.style.display = 'none';
                 
-                // 500ms後にカーソルガイドを非表示
+                // 描画ロックが解除された後に一度だけ描画を確実に実行
                 setTimeout(function() {
-                    cursorGuide.style.display = 'none';
-                }, 500);
+                    // 通常の描画関数を使用（ロックされていない状態で確実に描画）
+                    isDrawingLocked = false; // 強制的にロック解除
+                    draw(angle); // 確実に描画
+                }, 100);
             });
             
             // マウス操作の共通処理関数
@@ -665,23 +710,32 @@
             
             // 描画関数
             function draw(angleInDegrees) {
-                // 角度が特殊角でなければ、最も近い特殊角に修正
-                if (specialAngles.indexOf(angleInDegrees) === -1) {
-                    // 最も近い特殊角を見つける
-                    let closestAngle = specialAngles[0];
-                    let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
-                    
-                    for (let i = 1; i < specialAngles.length; i++) {
-                        const diff = Math.abs(specialAngles[i] - angleInDegrees);
-                        if (diff < minDiff) {
-                            minDiff = diff;
-                            closestAngle = specialAngles[i];
+                // requestAnimationFrameを使用して描画を最適化
+                requestAnimationFrame(() => {
+                    // 角度が特殊角でなければ、最も近い特殊角に修正
+                    if (specialAngles.indexOf(angleInDegrees) === -1) {
+                        // 最も近い特殊角を見つける
+                        let closestAngle = specialAngles[0];
+                        let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
+                        
+                        for (let i = 1; i < specialAngles.length; i++) {
+                            const diff = Math.abs(specialAngles[i] - angleInDegrees);
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                closestAngle = specialAngles[i];
+                            }
                         }
+                        
+                        angleInDegrees = closestAngle;
                     }
                     
-                    angleInDegrees = closestAngle;
-                }
-                
+                    // 以降の処理は実際の描画処理
+                    performDraw(angleInDegrees);
+                });
+            }
+            
+            // 実際の描画処理を行う関数
+            function performDraw(angleInDegrees) {
                 // キャンバスをクリア
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
