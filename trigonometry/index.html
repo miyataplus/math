@@ -361,23 +361,25 @@
                 const angleIndex = specialAngles.indexOf(angle);
                 if (angleIndex !== -1) {
                     slider.value = angleIndex;
-                } else {
-                    // 最も近い特殊角度を見つける
-                    let closestIndex = 0;
-                    let minDiff = Math.abs(specialAngles[0] - angle);
-                    
-                    for (let i = 1; i < specialAngles.length; i++) {
-                        const diff = Math.abs(specialAngles[i] - angle);
-                        if (diff < minDiff) {
-                            minDiff = diff;
-                            closestIndex = i;
-                        }
-                    }
-                    
-                    slider.value = closestIndex;
+                    draw(angle);
+                    return;
                 }
                 
-                draw(angle);
+                // 特殊角以外の場合は最も近い特殊角に強制する
+                let closestIndex = 0;
+                let minDiff = Math.abs(specialAngles[0] - angle);
+                
+                for (let i = 1; i < specialAngles.length; i++) {
+                    const diff = Math.abs(specialAngles[i] - angle);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestIndex = i;
+                    }
+                }
+                
+                const closestAngle = specialAngles[closestIndex];
+                slider.value = closestIndex;
+                draw(closestAngle);
             }
             
             // スライダーの値が変更されたときのイベントリスナー
@@ -425,6 +427,86 @@
                     cursorGuide.style.display = 'none';
                 }, 500);
             });
+            
+            // マウス操作の共通処理関数
+            function handleMouseInteraction(event, isClick) {
+                // クリック/カーソル位置を取得（キャンバス内の相対座標）
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // 中心からの距離と角度を計算
+                const dx = x - centerX;
+                const dy = centerY - y; // y軸は下向きが正なので反転
+                
+                // 中心からの距離（半径）を計算
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // 円周からの距離を計算
+                const distanceFromCircle = Math.abs(distance - radius);
+                
+                // カーソルガイドの表示・位置設定
+                const CIRCLE_PROXIMITY_THRESHOLD = 80; // 円周からの距離のしきい値（px）
+                
+                if (distanceFromCircle <= CIRCLE_PROXIMITY_THRESHOLD) {
+                    // 円周に近い場合、角度を計算
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < 0) angle += 2 * Math.PI; // 0～2πの範囲に調整
+                    
+                    // ラジアンから度数法に変換
+                    let degrees = angle * 180 / Math.PI;
+                    
+                    // 最も近い特殊角を見つける
+                    let closestAngle = specialAngles[0];
+                    let minDiff = Math.abs(degrees - specialAngles[0]);
+                    
+                    for (let i = 1; i < specialAngles.length; i++) {
+                        const diff = Math.abs(degrees - specialAngles[i]);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestAngle = specialAngles[i];
+                        }
+                    }
+                    
+                    // カーソルガイドの位置を特殊角に合わせて更新
+                    const guideAngleInRadians = closestAngle * Math.PI / 180;
+                    const guideX = centerX + radius * Math.cos(guideAngleInRadians);
+                    const guideY = centerY - radius * Math.sin(guideAngleInRadians);
+                    
+                    cursorGuide.style.display = 'block';
+                    cursorGuide.style.left = `${guideX}px`;
+                    cursorGuide.style.top = `${guideY}px`;
+                    
+                    // クリック時またはクリック可能距離内の場合のみ角度を更新
+                    if (isClick) {
+                        updateAngle(closestAngle);
+                    }
+                } else {
+                    // 円周から離れている場合、カーソルガイドを非表示
+                    cursorGuide.style.display = 'none';
+                    
+                    // クリック時に円内部をクリックした場合、最も近い特殊角を選択
+                    if (isClick && distance <= radius * 1.2) {
+                        let angle = Math.atan2(dy, dx);
+                        if (angle < 0) angle += 2 * Math.PI;
+                        let degrees = angle * 180 / Math.PI;
+                        
+                        // 最も近い特殊角を見つける
+                        let closestAngle = specialAngles[0];
+                        let minDiff = Math.abs(degrees - specialAngles[0]);
+                        
+                        for (let i = 1; i < specialAngles.length; i++) {
+                            const diff = Math.abs(degrees - specialAngles[i]);
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                closestAngle = specialAngles[i];
+                            }
+                        }
+                        
+                        updateAngle(closestAngle);
+                    }
+                }
+            }
             
             // タッチイベント処理の共通関数
             function handleTouchInteraction(touch) {
@@ -478,73 +560,6 @@
                 cursorGuide.style.display = 'block';
                 cursorGuide.style.left = `${guideX}px`;
                 cursorGuide.style.top = `${guideY}px`;
-            }
-            
-            // マウス操作の共通処理関数
-            function handleMouseInteraction(event, isClick) {
-                // クリック/カーソル位置を取得（キャンバス内の相対座標）
-                const rect = canvas.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                
-                // 中心からの距離と角度を計算
-                const dx = x - centerX;
-                const dy = centerY - y; // y軸は下向きが正なので反転
-                
-                // 中心からの距離（半径）を計算
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // 円周からの距離を計算
-                const distanceFromCircle = Math.abs(distance - radius);
-                
-                // カーソルガイドの表示・位置設定
-                const CIRCLE_PROXIMITY_THRESHOLD = 80; // 円周からの距離のしきい値（px）
-                
-                if (distanceFromCircle <= CIRCLE_PROXIMITY_THRESHOLD) {
-                    // 円周に近い場合、カーソルガイドを表示
-                    const angle = Math.atan2(dy, dx);
-                    const guideX = centerX + radius * Math.cos(angle);
-                    const guideY = centerY - radius * Math.sin(angle);
-                    
-                    cursorGuide.style.display = 'block';
-                    cursorGuide.style.left = `${guideX}px`;
-                    cursorGuide.style.top = `${guideY}px`;
-                } else {
-                    // 円周から離れている場合、カーソルガイドを非表示
-                    cursorGuide.style.display = 'none';
-                }
-                
-                // 円周の近く（半径の±Npx以内）のみ反応
-                if (distanceFromCircle > CIRCLE_PROXIMITY_THRESHOLD) {
-                    // クリック時は円の外でも内側を指していれば反応する
-                    if (isClick && distance <= radius * 1.2) {
-                        // 処理を続行
-                    } else {
-                        return; // 円周から離れている場合は何もしない
-                    }
-                }
-                
-                // 角度をラジアンで計算
-                let angle = Math.atan2(dy, dx);
-                if (angle < 0) angle += 2 * Math.PI; // 0～2πの範囲に調整
-                
-                // ラジアンから度数法に変換
-                let degrees = angle * 180 / Math.PI;
-                
-                // 最も近い特殊角を見つける
-                let closestAngle = specialAngles[0];
-                let minDiff = Math.abs(degrees - specialAngles[0]);
-                
-                for (let i = 1; i < specialAngles.length; i++) {
-                    const diff = Math.abs(degrees - specialAngles[i]);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestAngle = specialAngles[i];
-                    }
-                }
-                
-                // 最も近い特殊角に更新
-                updateAngle(closestAngle);
             }
             
             // 三角関数の値を分数形式に変換する関数
