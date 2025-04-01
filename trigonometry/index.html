@@ -375,12 +375,12 @@
             const hypotenuseLabelDisplay = document.getElementById('hypotenuseLabel');
             
             // タイトルをKaTeXで表示
-            katex.render("\\sin(\\theta) = \\frac{\\text{ 高さ }}{\\text{ 斜辺 }}", sinTitleDisplay);
-            katex.render("\\cos(\\theta) = \\frac{\\text{ 底辺 }}{\\text{ 斜辺 }}", cosTitleDisplay);
-            katex.render("\\tan(\\theta) = \\frac{\\text{ 高さ }}{\\text{ 底辺 }}", tanTitleDisplay);
+            katex.render("\\sin(\\theta) = \\frac{\\color{#4CAF50}{\\phantom{|} \\text{ 高さ } \\phantom{|}}}{\\color{#E91E63}{\\phantom{|} \\text{ 斜辺 } \\phantom{|}}}", sinTitleDisplay);
+            katex.render("\\cos(\\theta) = \\frac{\\color{#2196F3}{\\phantom{|} \\text{ 底辺 } \\phantom{|}}}{\\color{#E91E63}{\\phantom{|} \\text{ 斜辺 } \\phantom{|}}}", cosTitleDisplay);
+            katex.render("\\tan(\\theta) = \\frac{\\color{#4CAF50}{\\phantom{|} \\text{ 高さ } \\phantom{|}}}{\\color{#2196F3}{\\phantom{|} \\text{ 底辺 } \\phantom{|}}}", tanTitleDisplay);
             
             // 特殊角度のリスト (スライダーのステップに対応)
-            const specialAngles = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330, 360];
+            const specialAngles = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
             
             // キャンバスの中心と半径（後でupdateCanvasDimensions()で更新される）
             let centerX;
@@ -778,7 +778,6 @@
                     case 300: return "\\frac{5}{3}\\pi";
                     case 315: return "\\frac{7}{4}\\pi";
                     case 330: return "\\frac{11}{6}\\pi";
-                    case 360: return "2\\pi";
                     default:
                         // その他の角度の場合は少数表示にフォールバック
                         return (angleInDegrees * Math.PI / 180).toFixed(2) + " \\text{ rad}";
@@ -908,10 +907,82 @@
                 const katexFormula = getRadianKatexRepresentation(angleInDegrees);
                 katex.render(katexFormula, radianValueDisplay);
                 
-                // 三角関数の値を表示（分数形式）
-                sinValueDisplay.innerHTML = getFractionRepresentation(sinValue, angleInDegrees);
-                cosValueDisplay.innerHTML = getFractionRepresentation(cosValue, angleInDegrees);
-                tanValueDisplay.innerHTML = getFractionRepresentation(tanValue, angleInDegrees);
+                // 三角関数の値をKaTeX形式に変換する関数（色付き）
+                function getColoredKatexFormula(value, angle, type) {
+                    // nullの場合は「無し」と表示
+                    if (value === null) {
+                        return "\\text{無し}";
+                    }
+                    
+                    // 特殊角における正確な値を返す
+                    const isCloseTo = (a, b) => Math.abs(a - b) < 0.0001;
+                    
+                    // tan(90°)とtan(270°)のケースを特別に処理
+                    if ((angle === 90 || angle === 270) && Math.abs(value) > 1000000) {
+                        return "\\text{無し}";
+                    }
+                    
+                    // 色の設定
+                    const heightColor = "#4CAF50"; // 緑色（高さ）
+                    const baseColor = "#2196F3";   // 青色（底辺）
+                    const hypotenuseColor = "#E91E63"; // 赤色（斜辺）
+                    
+                    // 分子と分母の色を設定
+                    let numeratorColor, denominatorColor;
+                    
+                    if (type === "sin") {
+                        // sin = 高さ/斜辺
+                        numeratorColor = heightColor;
+                        denominatorColor = hypotenuseColor;
+                    } else if (type === "cos") {
+                        // cos = 底辺/斜辺
+                        numeratorColor = baseColor;
+                        denominatorColor = hypotenuseColor;
+                    } else if (type === "tan") {
+                        // tan = 高さ/底辺
+                        numeratorColor = heightColor;
+                        denominatorColor = baseColor;
+                    }
+                    
+                    // sin/cosの値
+                    if (isCloseTo(value, 0)) return "0";
+                    if (isCloseTo(value, 1)) return "1";
+                    if (isCloseTo(value, -1)) return "-1";
+                    if (isCloseTo(value, 1/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    if (isCloseTo(value, -1/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    if (isCloseTo(value, Math.sqrt(2)/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{2} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    if (isCloseTo(value, -Math.sqrt(2)/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{2} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    if (isCloseTo(value, Math.sqrt(3)/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    if (isCloseTo(value, -Math.sqrt(3)/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
+                    
+                    // tanの値
+                    if (isCloseTo(value, Math.sqrt(3))) return `\\color{${numeratorColor}}{\\sqrt{3}}`;
+                    if (isCloseTo(value, -Math.sqrt(3))) return `-\\color{${numeratorColor}}{\\sqrt{3}}`;
+                    if (isCloseTo(value, 1/Math.sqrt(3))) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
+                    if (isCloseTo(value, -1/Math.sqrt(3))) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
+                    if (isCloseTo(value, Math.sqrt(3)/3)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 3 \\phantom{|}}}`;
+                    if (isCloseTo(value, -Math.sqrt(3)/3)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 3 \\phantom{|}}}`;
+                    
+                    // その他の値
+                    if (angle % 90 === 0 && !isFinite(value)) {
+                        return "\\text{無し}";
+                    }
+                    
+                    // 少数表示（特殊角以外の場合）
+                    return value.toFixed(4);
+                }
+
+                // KaTeXを使って三角関数の値を表示（分数形式、色付き）
+                const valueDisplayStyle = "\\displaystyle";
+                katex.render(`${valueDisplayStyle} ${getColoredKatexFormula(sinValue, angleInDegrees, "sin")}`, sinValueDisplay, {
+                    fontSize: window.innerWidth < 480 ? '1.5em' : '1.8em'
+                });
+                katex.render(`${valueDisplayStyle} ${getColoredKatexFormula(cosValue, angleInDegrees, "cos")}`, cosValueDisplay, {
+                    fontSize: window.innerWidth < 480 ? '1.5em' : '1.8em'
+                });
+                katex.render(`${valueDisplayStyle} ${getColoredKatexFormula(tanValue, angleInDegrees, "tan")}`, tanValueDisplay, {
+                    fontSize: window.innerWidth < 480 ? '1.5em' : '1.8em'
+                });
                 
                 // 角度線を描画
                 ctx.beginPath();
@@ -1020,29 +1091,131 @@
                 // 斜辺の長さを表示（赤色）
                 katex.render(`\\text{斜辺} = 1`, hypotenuseLabelDisplay);
                 
-                // 説明テキストもキャンバスに直接描画
-                const fontSize = window.innerWidth < 480 ? 9 : 12;
-                ctx.font = `${fontSize}px Arial`;
-                
                 // 画面サイズに応じてオフセットを調整
                 const textOffsetY = window.innerWidth < 480 ? 8 : 15;
                 const textOffsetX = window.innerWidth < 480 ? 3 : 10;
                 
+                // 既存のテキストオーバーレイ要素を削除
+                document.querySelectorAll('.canvas-text-overlay').forEach(el => el.remove());
+                
+                // オーバーレイ要素を作成するヘルパー関数
+                function createOverlayElement(formula, x, y, color) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'canvas-text-overlay';
+                    overlay.style.position = 'absolute';
+                    overlay.style.left = `${x}px`;
+                    overlay.style.top = `${y}px`;
+                    overlay.style.transform = 'translate(-50%, -50%)';
+                    overlay.style.pointerEvents = 'none';
+                    overlay.style.color = color;
+                    overlay.style.fontSize = window.innerWidth < 480 ? '1.2rem' : '1.5em';
+                    overlay.style.fontWeight = 'bold'; // 太字に設定
+                    overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; // 半透明の白色背景
+                    overlay.style.padding = '2px';
+                    overlay.style.borderRadius = '3px';
+                    canvas.parentNode.appendChild(overlay);
+                    katex.render(formula, overlay);
+                    return overlay;
+                }
+                
+                // 辺のラベル表示のための共通設定
+                const distanceFromEdge = 45;
+                
                 // 底辺の説明 (90°と270°のときは非表示)
                 if (angleInDegrees !== 90 && angleInDegrees !== 270) {
-                    ctx.fillStyle = '#2196F3';
-                    ctx.fillText("底辺", centerX + (radius * cosValue / 2), centerY + textOffsetY);
+                    // 三角形の頂点
+                    const A = {x: centerX, y: centerY}; // 原点
+                    const B = {x: triangleX, y: triangleY}; // 底辺上の点
+                    const C = {x: point.x, y: point.y}; // 円周上の点
+                    
+                    // 底辺の中点
+                    const midAB = {x: (A.x + B.x) / 2, y: (A.y + B.y) / 2};
+                    
+                    // 重心の計算
+                    const centroid = {
+                        x: (A.x + B.x + C.x) / 3,
+                        y: (A.y + B.y + C.y) / 3
+                    };
+                    
+                    // 底辺の中点から重心への方向ベクトル
+                    const vecX = midAB.x - centroid.x;
+                    const vecY = midAB.y - centroid.y;
+                    
+                    // ベクトルの長さを正規化
+                    const length = Math.sqrt(vecX * vecX + vecY * vecY);
+                    const normalizedVecX = vecX / length;
+                    const normalizedVecY = vecY / length;
+                    
+                    // 正規化されたベクトルを使用して底辺の中点から一定距離離れた位置を計算
+                    const baseX = midAB.x + normalizedVecX * distanceFromEdge;
+                    const baseY = midAB.y + normalizedVecY * distanceFromEdge;
+                    
+                    createOverlayElement(baseFormula, baseX, baseY, '#2196F3');
                 }
                 
                 // 高さの説明 (0°と180°のときは非表示)
-                if (angleInDegrees !== 0 && angleInDegrees !== 180) {
-                    ctx.fillStyle = '#4CAF50';
-                    ctx.fillText("高さ", triangleX + textOffsetX, centerY - (radius * sinValue / 2));
+                if (angleInDegrees !== 0 && angleInDegrees !== 180 && angleInDegrees !== 360) {
+                    // 三角形の頂点
+                    const A = {x: centerX, y: centerY}; // 原点
+                    const B = {x: triangleX, y: triangleY}; // 底辺上の点
+                    const C = {x: point.x, y: point.y}; // 円周上の点
+                    
+                    // 高さの中点
+                    const midBC = {x: (B.x + C.x) / 2, y: (B.y + C.y) / 2};
+                    
+                    // 重心の計算
+                    const centroid = {
+                        x: (A.x + B.x + C.x) / 3,
+                        y: (A.y + B.y + C.y) / 3
+                    };
+                    
+                    // 高さの中点から重心への方向ベクトル
+                    const vecX = midBC.x - centroid.x;
+                    const vecY = midBC.y - centroid.y;
+                    
+                    // ベクトルの長さを正規化
+                    const length = Math.sqrt(vecX * vecX + vecY * vecY);
+                    const normalizedVecX = vecX / length;
+                    const normalizedVecY = vecY / length;
+                    
+                    // 正規化されたベクトルを使用して高さの中点から一定距離離れた位置を計算
+                    const heightX = midBC.x + normalizedVecX * distanceFromEdge;
+                    const heightY = midBC.y + normalizedVecY * distanceFromEdge;
+                    
+                    createOverlayElement(heightFormula, heightX, heightY, '#4CAF50');
                 }
                 
-                // 斜辺の説明
-                ctx.fillStyle = '#E91E63';
-                ctx.fillText("斜辺", (centerX + point.x) / 2 - textOffsetX, (centerY + point.y) / 2 - textOffsetY);
+                if (angleInDegrees !== 0 && angleInDegrees !== 180 && angleInDegrees !== 360) {
+                    // 斜辺の説明
+                    // 三角形の頂点
+                    const A = {x: centerX, y: centerY}; // 原点
+                    const B = {x: triangleX, y: triangleY}; // 底辺上の点
+                    const C = {x: point.x, y: point.y}; // 円周上の点
+                    
+                    // 斜辺の中点
+                    const midAC = {x: (A.x + C.x) / 2, y: (A.y + C.y) / 2};
+                    
+                    // 重心の計算
+                    const centroid = {
+                        x: (A.x + B.x + C.x) / 3,
+                        y: (A.y + B.y + C.y) / 3
+                    };
+                    
+                    // 斜辺の中点から重心への方向ベクトル
+                    const vecX = midAC.x - centroid.x;
+                    const vecY = midAC.y - centroid.y;
+                    
+                    // ベクトルの長さを正規化
+                    const length = Math.sqrt(vecX * vecX + vecY * vecY);
+                    const normalizedVecX = vecX / length;
+                    const normalizedVecY = vecY / length;
+                    
+                    // 正規化されたベクトルを使用して斜辺の中点から一定距離離れた位置を計算
+                    const hypotenuseX = midAC.x + normalizedVecX * distanceFromEdge;
+                    const hypotenuseY = midAC.y + normalizedVecY * distanceFromEdge;
+                    
+                    createOverlayElement(`1`, hypotenuseX, hypotenuseY, '#E91E63');
+                }
             }
             
             // 初期化時に最後の角度値を設定（スライダーの初期値を使用）
