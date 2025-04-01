@@ -925,50 +925,59 @@
                     // 色の設定
                     const heightColor = "#4CAF50"; // 緑色（高さ）
                     const baseColor = "#2196F3";   // 青色（底辺）
-                    const hypotenuseColor = "#E91E63"; // 赤色（斜辺）
                     
-                    // 分子と分母の色を設定
-                    let numeratorColor, denominatorColor;
-                    
+                    // sin, cos, tanの色を設定
                     if (type === "sin") {
-                        // sin = 高さ/斜辺
-                        numeratorColor = heightColor;
-                        denominatorColor = hypotenuseColor;
-                    } else if (type === "cos") {
-                        // cos = 底辺/斜辺
-                        numeratorColor = baseColor;
-                        denominatorColor = hypotenuseColor;
-                    } else if (type === "tan") {
-                        // tan = 高さ/底辺
-                        numeratorColor = heightColor;
-                        denominatorColor = baseColor;
+                        // sinは常に緑色
+                        if (isCloseTo(value, 0)) return "\\color{" + heightColor + "}{0}";
+                        if (isCloseTo(value, 1)) return "\\color{" + heightColor + "}{1}";
+                        if (isCloseTo(value, -1)) return "\\color{" + heightColor + "}{-1}";
+                        if (isCloseTo(value, 1/2)) return `\\color{${heightColor}}{\\frac{\\phantom{|} 1 \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -1/2)) return `\\color{${heightColor}}{-\\frac{\\phantom{|} 1 \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, Math.sqrt(2)/2)) return `\\color{${heightColor}}{\\frac{\\phantom{|} \\sqrt{2} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(2)/2)) return `\\color{${heightColor}}{-\\frac{\\phantom{|} \\sqrt{2} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, Math.sqrt(3)/2)) return `\\color{${heightColor}}{\\frac{\\phantom{|} \\sqrt{3} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(3)/2)) return `\\color{${heightColor}}{-\\frac{\\phantom{|} \\sqrt{3} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        // その他の値
+                        return "\\color{" + heightColor + "}{" + value.toFixed(4) + "}";
+                    }
+                    else if (type === "cos") {
+                        // cosは常に青色
+                        if (isCloseTo(value, 0)) return "\\color{" + baseColor + "}{0}";
+                        if (isCloseTo(value, 1)) return "\\color{" + baseColor + "}{1}";
+                        if (isCloseTo(value, -1)) return "\\color{" + baseColor + "}{-1}";
+                        if (isCloseTo(value, 1/2)) return `\\color{${baseColor}}{\\frac{\\phantom{|} 1 \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -1/2)) return `\\color{${baseColor}}{-\\frac{\\phantom{|} 1 \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, Math.sqrt(2)/2)) return `\\color{${baseColor}}{\\frac{\\phantom{|} \\sqrt{2} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(2)/2)) return `\\color{${baseColor}}{-\\frac{\\phantom{|} \\sqrt{2} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, Math.sqrt(3)/2)) return `\\color{${baseColor}}{\\frac{\\phantom{|} \\sqrt{3} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(3)/2)) return `\\color{${baseColor}}{-\\frac{\\phantom{|} \\sqrt{3} \\phantom{|}}{\\phantom{|} 2 \\phantom{|}}}`;
+                        // その他の値
+                        return "\\color{" + baseColor + "}{" + value.toFixed(4) + "}";
+                    }
+                    else if (type === "tan") {
+                        // tanは分子が緑色、分母が青色
+                        if (isCloseTo(value, 0)) return "0";
+                        if (isCloseTo(value, 1)) return "1";
+                        if (isCloseTo(value, -1)) return "-1";
+                        // tanの値 - 特殊角
+                        if (isCloseTo(value, Math.sqrt(3))) return `\\frac{\\color{${heightColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} 1 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(3))) return `-\\frac{\\color{${heightColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} 1 \\phantom{|}}}`;
+                        if (isCloseTo(value, 1/Math.sqrt(3))) return `\\frac{\\color{${heightColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
+                        if (isCloseTo(value, -1/Math.sqrt(3))) return `-\\frac{\\color{${heightColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
+                        if (isCloseTo(value, Math.sqrt(3)/3)) return `\\frac{\\color{${heightColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} 3 \\phantom{|}}}`;
+                        if (isCloseTo(value, -Math.sqrt(3)/3)) return `-\\frac{\\color{${heightColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${baseColor}}{\\phantom{|} 3 \\phantom{|}}}`;
+                        
+                        // その他の値
+                        if (angle % 90 === 0 && !isFinite(value)) {
+                            return "\\text{無し}";
+                        }
+                        
+                        // 近似的な分数表示を行う
+                        return `\\frac{\\color{${heightColor}}{\\text{約} ${(value).toFixed(2)}}}{\\color{${baseColor}}{1}}`;
                     }
                     
-                    // sin/cosの値
-                    if (isCloseTo(value, 0)) return "0";
-                    if (isCloseTo(value, 1)) return "1";
-                    if (isCloseTo(value, -1)) return "-1";
-                    if (isCloseTo(value, 1/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    if (isCloseTo(value, -1/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    if (isCloseTo(value, Math.sqrt(2)/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{2} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    if (isCloseTo(value, -Math.sqrt(2)/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{2} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    if (isCloseTo(value, Math.sqrt(3)/2)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    if (isCloseTo(value, -Math.sqrt(3)/2)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 2 \\phantom{|}}}`;
-                    
-                    // tanの値
-                    if (isCloseTo(value, Math.sqrt(3))) return `\\color{${numeratorColor}}{\\sqrt{3}}`;
-                    if (isCloseTo(value, -Math.sqrt(3))) return `-\\color{${numeratorColor}}{\\sqrt{3}}`;
-                    if (isCloseTo(value, 1/Math.sqrt(3))) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
-                    if (isCloseTo(value, -1/Math.sqrt(3))) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} 1 \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}`;
-                    if (isCloseTo(value, Math.sqrt(3)/3)) return `\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 3 \\phantom{|}}}`;
-                    if (isCloseTo(value, -Math.sqrt(3)/3)) return `-\\frac{\\color{${numeratorColor}}{\\phantom{|} \\sqrt{3} \\phantom{|}}}{\\color{${denominatorColor}}{\\phantom{|} 3 \\phantom{|}}}`;
-                    
-                    // その他の値
-                    if (angle % 90 === 0 && !isFinite(value)) {
-                        return "\\text{無し}";
-                    }
-                    
-                    // 少数表示（特殊角以外の場合）
+                    // デフォルト
                     return value.toFixed(4);
                 }
 
