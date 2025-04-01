@@ -1,0 +1,307 @@
+        /* リセットと基本スタイル */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin-bottom: 20px;
+            aspect-ratio: 1 / 1;
+        }
+        
+        #unitCircle {
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #cursorGuide {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(233, 30, 99, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+        }
+        
+        /* タッチデバイス向けのスタイル */
+        @media (hover: none) and (pointer: coarse) {
+            #cursorGuide {
+                width: 16px;
+                height: 16px;
+                background-color: rgba(233, 30, 99, 0.8);
+                box-shadow: 0 0 5px rgba(233, 30, 99, 0.5);
+            }
+        }
+        
+        .edge-labels {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: auto;
+            min-height: 2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .edge-label {
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 5px;
+            width: calc(100% / 3 - 10px);
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .hypotenuse-label {
+            color: #E91E63;
+        }
+        
+        .base-label {
+            color: #2196F3;
+        }
+        
+        .height-label {
+            color: #4CAF50;
+        }
+        
+        .slider-container {
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        #angleSlider {
+            width: 100%;
+        }
+        
+        .values-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .value-box {
+            background-color: #f8f9fa;
+            padding: 15px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .value-box h3 {
+            margin-top: 0;
+            color: #555;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .value-box h3 .katex {
+            font-size: 1em;
+        }
+        
+        .value-box p {
+            font-size: 18px;
+            margin: 10px 0 0;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .value-fraction {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+        
+        .frac {
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+            letter-spacing: 0.001em;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .frac > span {
+            display: block;
+            padding: 0.1em;
+        }
+        
+        .frac span.bottom {
+            border-top: thin solid black;
+        }
+        
+        .frac span.symbol {
+            display: none;
+        }
+        
+        .katex-display {
+            margin: 0;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .canvas-container {
+                max-width: 100%;
+            }
+            
+            .values-container {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .value-box {
+                padding: 10px;
+            }
+            
+            .value-box h3 {
+                min-height: auto;
+            }
+            
+            .edge-labels {
+                flex-direction: row; /* 行方向に配置 */
+                height: auto;
+            }
+            
+            .edge-label {
+                width: calc(33.33% - 10px);
+                margin: 5px 0;
+            }
+            
+            .value-box h3 .katex {
+                font-size: 1.1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                margin: 5px;
+            }
+            
+            .container {
+                padding: 8px 10px;
+            }
+            
+            h1 {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            
+            /* モバイルでのファーストビュー最適化 */
+            .canvas-container {
+                margin-bottom: 3px;
+            }
+            
+            .edge-labels {
+                flex-direction: row; /* モバイルでも行方向に配置 */
+                margin-bottom: 2px;
+                gap: 5px;
+            }
+            
+            .edge-label {
+                padding: 2px;
+                margin: 1px 0;
+                font-size: 0.8rem;
+                width: calc(33.33% - 5px);
+                min-width: 0;
+            }
+            
+            /* モバイルビューでは横並びに変更して省スペース化 */
+            .values-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 2px;
+            }
+            
+            .value-box {
+                padding: 1rem 4px;
+                width: calc(33% - 2px);
+            }
+            
+            .slider-container {
+                margin: 2px 0 1rem;
+            }
+            
+            .slider-container label {
+                margin-bottom: 2px;
+                font-size: 0.8rem;
+            }
+            
+            .value-box h3 {
+                min-height: auto;
+                font-size: 1rem; /* フォントサイズを大きく */
+            }
+            
+            .value-box h3 .katex {
+                font-size: 1rem; /* KaTeXフォントサイズを大きく */
+            }
+            
+            .value-box p {
+                font-size: 0.85rem;
+                margin: 1rem 0 0;
+            }
+        } 
