@@ -73,6 +73,16 @@
             display: none;
         }
         
+        /* タッチデバイス向けのスタイル */
+        @media (hover: none) and (pointer: coarse) {
+            #cursorGuide {
+                width: 16px;
+                height: 16px;
+                background-color: rgba(233, 30, 99, 0.8);
+                box-shadow: 0 0 5px rgba(233, 30, 99, 0.5);
+            }
+        }
+        
         .edge-labels {
             display: flex;
             justify-content: space-around;
@@ -391,6 +401,84 @@
             canvas.addEventListener('mouseleave', function() {
                 cursorGuide.style.display = 'none';
             });
+            
+            // タッチイベントのサポート（モバイルデバイス用）
+            canvas.addEventListener('touchstart', function(event) {
+                event.preventDefault(); // デフォルトのスクロール動作を防止
+                if (event.touches.length === 1) {
+                    const touch = event.touches[0];
+                    handleTouchInteraction(touch);
+                }
+            });
+            
+            canvas.addEventListener('touchmove', function(event) {
+                event.preventDefault(); // デフォルトのスクロール動作を防止
+                if (event.touches.length === 1) {
+                    const touch = event.touches[0];
+                    handleTouchInteraction(touch);
+                }
+            });
+            
+            canvas.addEventListener('touchend', function(event) {
+                // タッチ終了後、500ms後にカーソルガイドを非表示
+                setTimeout(function() {
+                    cursorGuide.style.display = 'none';
+                }, 500);
+            });
+            
+            // タッチイベント処理の共通関数
+            function handleTouchInteraction(touch) {
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // 中心からの距離と角度を計算
+                const dx = x - centerX;
+                const dy = centerY - y;
+                
+                // 中心からの距離（半径）を計算
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // 円周からの距離を計算
+                const distanceFromCircle = Math.abs(distance - radius);
+                
+                // 円周の近く（半径の±25%）のタッチのみ処理
+                const proximityThreshold = radius * 0.25;
+                if (distanceFromCircle > proximityThreshold && distance > radius) {
+                    return; // 円周から離れている場合は何もしない
+                }
+                
+                // 角度をラジアンで計算
+                let angle = Math.atan2(dy, dx);
+                if (angle < 0) angle += 2 * Math.PI;
+                
+                // ラジアンから度数法に変換
+                let degrees = angle * 180 / Math.PI;
+                
+                // 最も近い特殊角を見つける
+                let closestAngle = specialAngles[0];
+                let minDiff = Math.abs(degrees - specialAngles[0]);
+                
+                for (let i = 1; i < specialAngles.length; i++) {
+                    const diff = Math.abs(degrees - specialAngles[i]);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestAngle = specialAngles[i];
+                    }
+                }
+                
+                // 特殊角に即座に更新（表示もすぐに更新）
+                updateAngle(closestAngle);
+                
+                // カーソルガイドの位置を特殊角に合わせて更新
+                const angleInRadians = closestAngle * Math.PI / 180;
+                const guideX = centerX + radius * Math.cos(angleInRadians);
+                const guideY = centerY - radius * Math.sin(angleInRadians);
+                
+                cursorGuide.style.display = 'block';
+                cursorGuide.style.left = `${guideX}px`;
+                cursorGuide.style.top = `${guideY}px`;
+            }
             
             // マウス操作の共通処理関数
             function handleMouseInteraction(event, isClick) {
