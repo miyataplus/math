@@ -233,13 +233,17 @@
             }
             
             .edge-labels {
-                flex-direction: column;
+                flex-direction: row; /* 行方向に配置 */
                 height: auto;
             }
             
             .edge-label {
-                width: 100%;
+                width: calc(33.33% - 10px);
                 margin: 5px 0;
+            }
+            
+            .value-box h3 .katex {
+                font-size: 1.1em;
             }
         }
         
@@ -249,11 +253,67 @@
             }
             
             .container {
-                padding: 10px;
+                padding: 8px 10px;
             }
             
             h1 {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            
+            /* モバイルでのファーストビュー最適化 */
+            .canvas-container {
+                margin-bottom: 3px;
+            }
+            
+            .edge-labels {
+                flex-direction: row; /* モバイルでも行方向に配置 */
+                margin-bottom: 2px;
+                gap: 5px;
+            }
+            
+            .edge-label {
+                padding: 2px;
+                margin: 1px 0;
+                font-size: 0.8rem;
+                width: calc(33.33% - 5px);
+                min-width: 0;
+            }
+            
+            /* モバイルビューでは横並びに変更して省スペース化 */
+            .values-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 2px;
+            }
+            
+            .value-box {
+                padding: 1rem 4px;
+                width: calc(33% - 2px);
+            }
+            
+            .slider-container {
+                margin: 2px 0 1rem;
+            }
+            
+            .slider-container label {
+                margin-bottom: 2px;
+                font-size: 0.8rem;
+            }
+            
+            .value-box h3 {
+                min-height: auto;
+                font-size: 1rem; /* フォントサイズを大きく */
+            }
+            
+            .value-box h3 .katex {
+                font-size: 1rem; /* KaTeXフォントサイズを大きく */
+            }
+            
+            .value-box p {
+                font-size: 0.85rem;
+                margin: 1rem 0 0;
             }
         }
     </style>
@@ -813,14 +873,14 @@
                         ? labels.filter(l => l.angle % 45 === 0) // タブレットでは45度間隔で表示
                         : labels; // デスクトップでは全て表示
                 
-                ctx.font = window.innerWidth < 480 ? '10px Arial' : '12px Arial';
+                ctx.font = window.innerWidth < 480 ? '9px Arial' : '12px Arial';
                 ctx.fillStyle = '#666';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
                 labelsToShow.forEach(label => {
                     const pos = getPointCoordinates(label.angle);
-                    const labelRadius = radius + (window.innerWidth < 480 ? 15 : 20);
+                    const labelRadius = radius + (window.innerWidth < 480 ? 10 : 20);
                     const labelX = centerX + labelRadius * Math.cos(pos.radians);
                     const labelY = centerY - labelRadius * Math.sin(pos.radians);
                     ctx.fillStyle = '#666'; // 角度ラベルの色を設定
@@ -961,12 +1021,12 @@
                 katex.render(`\\text{斜辺} = 1`, hypotenuseLabelDisplay);
                 
                 // 説明テキストもキャンバスに直接描画
-                const fontSize = window.innerWidth < 480 ? 10 : 12;
+                const fontSize = window.innerWidth < 480 ? 9 : 12;
                 ctx.font = `${fontSize}px Arial`;
                 
                 // 画面サイズに応じてオフセットを調整
-                const textOffsetY = window.innerWidth < 480 ? 10 : 15;
-                const textOffsetX = window.innerWidth < 480 ? 5 : 10;
+                const textOffsetY = window.innerWidth < 480 ? 8 : 15;
+                const textOffsetX = window.innerWidth < 480 ? 3 : 10;
                 
                 // 底辺の説明 (90°と270°のときは非表示)
                 if (angleInDegrees !== 90 && angleInDegrees !== 270) {
