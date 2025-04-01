@@ -344,6 +344,11 @@
                 centerX = canvas.width / 2;
                 centerY = canvas.height / 2;
                 radius = Math.min(centerX, centerY) * 0.8; // 表示領域の80%を使用
+                
+                // サイズが変わった場合は現在の角度で再描画
+                const angleIndex = parseInt(slider.value);
+                const angle = specialAngles[angleIndex];
+                draw(angle);
             }
             
             // 初期サイズ調整
@@ -411,7 +416,7 @@
                     const touch = event.touches[0];
                     handleTouchInteraction(touch);
                 }
-            });
+            }, { passive: false });
             
             canvas.addEventListener('touchmove', function(event) {
                 event.preventDefault(); // デフォルトのスクロール動作を防止
@@ -419,10 +424,29 @@
                     const touch = event.touches[0];
                     handleTouchInteraction(touch);
                 }
+            }, { passive: false });
+            
+            // ウィンドウのスクロールイベントを追加（モバイルでのスクロール時の修正）
+            window.addEventListener('scroll', function() {
+                // スクロール時にスライダーの値から特殊角を強制的に再描画
+                const angleIndex = parseInt(slider.value);
+                const angle = specialAngles[angleIndex];
+                draw(angle);
             });
             
+            // タッチエンドイベント後にも角度を正しく保つための処理
             canvas.addEventListener('touchend', function(event) {
-                // タッチ終了後、500ms後にカーソルガイドを非表示
+                // タッチ終了後、正しい特殊角を設定
+                const angleIndex = parseInt(slider.value);
+                const angle = specialAngles[angleIndex];
+                
+                // 遅延を設けて角度を更新
+                setTimeout(function() {
+                    draw(angle);
+                    cursorGuide.style.display = 'none';
+                }, 100);
+                
+                // 500ms後にカーソルガイドを非表示
                 setTimeout(function() {
                     cursorGuide.style.display = 'none';
                 }, 500);
@@ -641,6 +665,23 @@
             
             // 描画関数
             function draw(angleInDegrees) {
+                // 角度が特殊角でなければ、最も近い特殊角に修正
+                if (specialAngles.indexOf(angleInDegrees) === -1) {
+                    // 最も近い特殊角を見つける
+                    let closestAngle = specialAngles[0];
+                    let minDiff = Math.abs(specialAngles[0] - angleInDegrees);
+                    
+                    for (let i = 1; i < specialAngles.length; i++) {
+                        const diff = Math.abs(specialAngles[i] - angleInDegrees);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestAngle = specialAngles[i];
+                        }
+                    }
+                    
+                    angleInDegrees = closestAngle;
+                }
+                
                 // キャンバスをクリア
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
