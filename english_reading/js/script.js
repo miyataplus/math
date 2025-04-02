@@ -9,6 +9,44 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
+// グローバル変数
+let currentDisplayLevel = 1; // デフォルトは1: 上級者向け（少ないヒント）
+
+// 表示レベルを変更する関数
+function changeDisplayLevel(level) {
+    // 前回のレベルを記憶
+    const prevLevel = currentDisplayLevel;
+    // 新しいレベルを設定
+    currentDisplayLevel = parseInt(level, 10);
+    
+    console.log(`表示レベルを ${prevLevel} から ${currentDisplayLevel} に変更`);
+    
+    // アニメーションを適用
+    document.body.classList.add('level-transitioning');
+    
+    // レベルボタンの状態を更新
+    updateLevelButtons();
+    
+    // ページを再レンダリングして、レベルに基づいて単語スタイルを適用
+    renderPassage();
+    
+    // アニメーション完了後にクラスを削除
+    setTimeout(() => {
+        document.body.classList.remove('level-transitioning');
+    }, 500);
+}
+
+// レベルボタンの状態を更新する関数
+function updateLevelButtons() {
+    // ラジオボタンのチェック状態を更新
+    const radios = document.querySelectorAll('input[name="hint-level"]');
+    radios.forEach(radio => {
+        if (parseInt(radio.value) === currentDisplayLevel) {
+            radio.checked = true;
+        }
+    });
+}
+
 // テキスト中から単語や文節を検索する関数（大文字小文字区別なし）
 function findTextInPassage(passage, searchText, startFrom = 0) {
     // 単語の境界を考慮して検索
@@ -53,13 +91,22 @@ function findTextInPassage(passage, searchText, startFrom = 0) {
 // 単語/フレーズを解説付きのHTML要素に変換する関数
 function createAnnotatedWordHtml(text, annotation, position = 0) {
     // 品詞または文法要素に基づいてクラスを決定
-    let classNames = '';
+    let classNames = 'word '; // wordクラスは常に適用
     if (annotation.type === 'phrase' || annotation.type === 'clause') {
-        classNames = annotation.type;
+        classNames += annotation.type;
     } else if (annotation.type) {
-        classNames = annotation.type; // noun, verb など
+        classNames += annotation.type; // noun, verb など
     }
-    
+
+    // 表示レベルをチェック
+    const level = annotation.level || 3; // levelが未定義の場合は最高レベル(3)とみなす
+    if (level > currentDisplayLevel) {
+        // レベル対象外の場合は通常のテキストとして表示（wordクラスを付けない）
+        return `<span data-text="${escapeHtml(annotation.text)}" data-level="${level}">${escapeHtml(text)}</span>`;
+    }
+
+    // --- レベル内の場合、ツールチップ付きのHTMLを生成 ---
+
     // 質問と回答のHTMLを生成
     let questionsHtml = '';
     if (annotation.questions && annotation.questions.length > 0) {
@@ -81,7 +128,7 @@ function createAnnotatedWordHtml(text, annotation, position = 0) {
     const explanationText = escapeHtml(annotation.explanation || '');
     const escapedText = escapeHtml(text);
     
-    return `<span class="word ${classNames}" data-text="${escapeHtml(annotation.text)}" data-pos="${position}">${escapedText}<div class="tooltip"><div class="tooltip-title">${escapedText}</div><div class="explanation">${explanationText}</div>${questionsHtml}</div></span>`;
+    return `<span class="${classNames.trim()}" data-text="${escapeHtml(annotation.text)}" data-level="${level}" data-pos="${position}">${escapedText}<div class="tooltip"><div class="tooltip-title">${escapedText}</div><div class="explanation">${explanationText}</div>${questionsHtml}</div></span>`;
 }
 
 // 長文とアノテーションを表示する関数
@@ -286,4 +333,15 @@ function toggleAnswer(answerId) {
 window.toggleAnswer = toggleAnswer;
 
 // ページ読み込み時に長文を表示
-document.addEventListener('DOMContentLoaded', renderPassage); 
+document.addEventListener('DOMContentLoaded', () => {
+    // ラジオボタンの初期値を設定
+    const radios = document.querySelectorAll('input[name="hint-level"]');
+    radios.forEach(radio => {
+        if (parseInt(radio.value) === currentDisplayLevel) {
+            radio.checked = true;
+        }
+    });
+    
+    // 初回レンダリング
+    renderPassage();
+}); 

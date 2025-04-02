@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英語長文勉強ツール</title>
+    <title>英文読解練習ツール</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>英語長文勉強ツール</h1>
+        <h1>英文読解練習ツール</h1>
+        
+        <div class="level-selector">
+            <span class="level-label">ヒントレベル：</span>
+            <div class="level-controls">
+                <label class="level-option" data-tooltip="上級者向け：必須単語のみヒント表示">
+                    <input type="radio" name="hint-level" value="1" onchange="changeDisplayLevel(this.value)" checked>
+                    <span class="level-button">少なめ</span>
+                </label>
+                <label class="level-option" data-tooltip="中級者向け：重要単語・フレーズを表示">
+                    <input type="radio" name="hint-level" value="2" onchange="changeDisplayLevel(this.value)">
+                    <span class="level-button">普通</span>
+                </label>
+                <label class="level-option" data-tooltip="初級者向け：すべての単語・フレーズを表示">
+                    <input type="radio" name="hint-level" value="3" onchange="changeDisplayLevel(this.value)">
+                    <span class="level-button">多め</span>
+                </label>
+            </div>
+        </div>
         
         <div class="legend">
             <div class="legend-item">
