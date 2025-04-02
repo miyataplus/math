@@ -1,0 +1,210 @@
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+.legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+.legend-item {
+    margin: 5px 10px;
+    display: flex;
+    align-items: center;
+}
+.legend-color {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+/* 凡例の色を常に表示 */
+.legend-color.noun { background-color: rgba(255, 102, 102, 0.3); }
+.legend-color.verb { background-color: rgba(102, 178, 255, 0.3); }
+.legend-color.adjective { background-color: rgba(102, 255, 102, 0.3); }
+.legend-color.adverb { background-color: rgba(255, 255, 102, 0.3); }
+.legend-color.preposition { background-color: rgba(255, 178, 102, 0.3); }
+.legend-color.conjunction { background-color: rgba(178, 102, 255, 0.3); }
+.legend-color.pronoun { background-color: rgba(255, 102, 255, 0.3); }
+.legend-color.article { background-color: rgba(102, 255, 255, 0.3); }
+.passage {
+    line-height: 1.8;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+/* タイトルのスタイル */
+.passage-title {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+    line-height: 1.4; /* タイトル行間調整 */
+}
+
+/* タイトル内の単語にもホバーエフェクトを適用 */
+.passage-title .word {
+    display: inline-block;
+    border-bottom: 1px dotted #777;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap; /* 単語内での改行を防止 */
+}
+
+/* タイトル内の単語のツールチップ位置調整 */
+.passage-title .word .tooltip {
+    z-index: 20; /* 本文より前面に表示 */
+    width: 320px; /* タイトルのツールチップは少し大きく */
+}
+
+/* 本文スタイル */
+.passage-body {
+    margin-top: 15px;
+}
+
+/* 段落スタイルを追加 */
+.passage p {
+    margin: 1em 0;
+    text-align: justify;
+}
+
+/* 長い単語の折り返し設定 */
+.passage {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* インライン要素の改行防止 */
+.word {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd; /* 薄いドット下線を追加して、ツールチップがあることを視覚的に示す */
+    white-space: nowrap; /* 単語内での改行を防止 */
+}
+.word:hover {
+    background-color: inherit; /* ホバー時のみ背景色を継承 */
+}
+.tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    transform: translateX(0);
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 300px;
+    z-index: 10; /* z-indexを上げる */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-align: left;
+    font-size: 14px;
+    margin-top: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    pointer-events: none; /* マウスイベントを透過させる */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+/* マウスホバー時に追加する隙間 */
+.word::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 150%; /* 右側にも余裕を持たせる */
+    height: 20px; /* マウスが移動する余裕を持たせる */
+    z-index: 0;
+}
+.word:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto; /* ホバー時にマウスイベントを有効化 */
+}
+.tooltip-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 3px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+.explanation {
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+.questions {
+    border-top: 1px solid #ddd;
+    padding-top: 8px;
+}
+.question {
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    margin: 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.answer {
+    display: none;
+    margin-top: 8px;
+    padding: 8px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    color: #333;
+    font-size: 13px;
+    border-left: 3px solid #4a6fa5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* 品詞ごとの色 - ホバー時のみ適用 */
+.word.noun:hover { background-color: rgba(255, 102, 102, 0.3); }
+.word.verb:hover { background-color: rgba(102, 178, 255, 0.3); }
+.word.adjective:hover { background-color: rgba(102, 255, 102, 0.3); }
+.word.adverb:hover { background-color: rgba(255, 255, 102, 0.3); }
+.word.preposition:hover { background-color: rgba(255, 178, 102, 0.3); }
+.word.conjunction:hover { background-color: rgba(178, 102, 255, 0.3); }
+.word.pronoun:hover { background-color: rgba(255, 102, 255, 0.3); }
+.word.article:hover { background-color: rgba(102, 255, 255, 0.3); }
+.word.phrase:hover { background-color: rgba(200, 200, 200, 0.3); }
+
+/* 初期状態ではスタイルを上書き */
+.word.phrase { border-bottom: 1px solid #ddd; }
+
+/* 各文のスタイル */
+.sentence {
+    margin-bottom: 1em;
+    padding: 5px;
+    border-radius: 4px;
+    background-color: rgba(245, 245, 245, 0.1);
+}
