@@ -418,18 +418,6 @@ h1 {
         gap: 12px;
     }
     
-    /* 凡例を縦方向に整理 */
-    .legend {
-        padding: 8px;
-        justify-content: flex-start;
-    }
-    
-    .legend-item {
-        margin: 4px 8px;
-        width: calc(50% - 16px);
-        font-size: 14px;
-    }
-    
     /* ツールチップの位置とサイズをモバイルに最適化 */
     .tooltip {
         width: 280px;
@@ -501,17 +489,6 @@ h1 {
     
     .passage-title {
         font-size: 18px;
-    }
-    
-    /* 凡例をさらに小さく整理 */
-    .legend-item {
-        width: calc(50% - 16px); /* 2列表示を維持 */
-        font-size: 13px;
-    }
-    
-    .legend-color {
-        width: 15px;
-        height: 15px;
     }
     
     /* レベル選択UIをさらに調整 */
