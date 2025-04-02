@@ -189,6 +189,16 @@ h1 {
     cursor: pointer;
     font-size: 12px;
 }
+
+/* 質問ボタンのホバーとアクティブ状態 */
+.question:hover {
+    background-color: #3a5d8f;
+}
+
+.question:active {
+    background-color: #2d4a73;
+}
+
 .answer {
     display: none;
     margin-top: 8px;
@@ -210,9 +220,6 @@ h1 {
 .word.pronoun:hover { background-color: rgba(255, 102, 255, 0.3); }
 .word.article:hover { background-color: rgba(102, 255, 255, 0.3); }
 .word.phrase:hover { background-color: rgba(200, 200, 200, 0.3); }
-
-/* 初期状態ではスタイルを上書き */
-.word.phrase { /* border-bottom: 1px solid #ddd; */ } /* フレーズのデフォルト下線も削除 */
 
 /* 各文のスタイル */
 .sentence {
@@ -331,4 +338,207 @@ h1 {
 
 .level-option:hover::after {
     opacity: 1;
+}
+
+/* タッチデバイス向けの追加スタイル */
+.touch-device .word::after {
+    height: 0; /* クリックしやすくするためにafterの高さをなくす */
+}
+
+.touch-device .word:hover .tooltip {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.touch-device .word:active {
+    opacity: 0.7;
+}
+
+/* ドラッグ/選択防止 */
+.touch-device .word {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* ツールチップの位置をJavaScriptで制御する */
+.touch-device .word .tooltip {
+    width: 250px;
+    max-width: 90vw;
+    /* JavaScriptで位置調整するため初期値のみ設定 */
+}
+
+/* ツールチップの位置調整（画面端での表示調整） */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 15px;
+        margin: 0 auto;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    .passage {
+        font-size: 18px;
+        line-height: 1.7;
+    }
+    
+    .passage-title {
+        font-size: 22px;
+    }
+    
+    /* レベル選択UIをモバイル向けに調整 */
+    .level-selector {
+        flex-direction: column;
+        padding: 12px;
+    }
+    
+    .level-label {
+        margin-right: 0;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+    
+    /* レベルボタンを大きく */
+    .level-button {
+        padding: 8px 18px;
+        font-size: 15px;
+        border-width: 2px;
+    }
+    
+    .level-controls {
+        gap: 12px;
+    }
+    
+    /* 凡例を縦方向に整理 */
+    .legend {
+        padding: 8px;
+        justify-content: flex-start;
+    }
+    
+    .legend-item {
+        margin: 4px 8px;
+        width: calc(50% - 16px);
+        font-size: 14px;
+    }
+    
+    /* ツールチップの位置とサイズをモバイルに最適化 */
+    .tooltip {
+        width: 280px;
+        max-width: 90vw;
+        font-size: 15px;
+    }
+    
+    /* 画面右端での位置調整 */
+    .word .tooltip {
+        left: 50%;
+        transform: translateX(-50%); /* 横方向に中央揃え */
+    }
+    
+    /* 画面右端の単語の場合、左寄せする */
+    .word:nth-last-child(-n+3) .tooltip {
+        left: auto;
+        right: 0;
+        transform: none;
+    }
+    
+    /* 画面左端の単語の場合、右寄せする */
+    .word:nth-child(-n+3) .tooltip {
+        left: 0;
+        transform: none;
+    }
+    
+    /* 質問ボタンのホバーとアクティブ状態 */
+    .question:hover {
+        background-color: #3a5d8f;
+    }
+    
+    .question:active {
+        background-color: #2d4a73;
+    }
+    
+    /* タッチ操作のためのスペース確保 */
+    .questions {
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+    
+    .question {
+        padding: 8px 12px; /* より大きなタッチターゲット */
+        margin: 5px;
+        font-size: 14px;
+        border-radius: 4px;
+    }
+    
+    .answer {
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* 小さなモバイル画面向け */
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+    
+    h1 {
+        font-size: 22px;
+    }
+    
+    .passage {
+        font-size: 16px;
+    }
+    
+    .passage-title {
+        font-size: 18px;
+    }
+    
+    /* 凡例をさらに小さく整理 */
+    .legend-item {
+        width: calc(50% - 16px); /* 2列表示を維持 */
+        font-size: 13px;
+    }
+    
+    .legend-color {
+        width: 15px;
+        height: 15px;
+    }
+    
+    /* レベル選択UIをさらに調整 */
+    .level-controls {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .level-button {
+        padding: 6px 14px;
+        font-size: 14px;
+    }
+    
+    /* ツールチップのサイズをさらに調整 */
+    .tooltip {
+        width: 220px;
+        font-size: 13px;
+        padding: 8px;
+    }
+    
+    .question {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+    
+    .answer {
+        font-size: 12px;
+        padding: 6px;
+    }
 }

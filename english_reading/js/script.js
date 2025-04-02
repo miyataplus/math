@@ -11,6 +11,7 @@ function escapeHtml(unsafe) {
 
 // グローバル変数
 let currentDisplayLevel = 1; // デフォルトは1: 上級者向け（少ないヒント）
+let activeTooltipElement = null; // 現在アクティブなツールチップを追跡
 
 // 表示レベルを変更する関数
 function changeDisplayLevel(level) {
@@ -117,7 +118,7 @@ function createAnnotatedWordHtml(text, annotation, position = 0) {
             const questionText = escapeHtml(q.question || '');
             const answerText = escapeHtml(q.answer || '');
             questionsHtml += `
-                <button class="question" onclick="toggleAnswer('${answerId}')">${questionText}</button>
+                <button class="question" onclick="toggleAnswer(event, '${answerId}')">${questionText}</button>
                 <div class="answer" id="${answerId}">${answerText}</div>
             `;
         });
@@ -128,7 +129,74 @@ function createAnnotatedWordHtml(text, annotation, position = 0) {
     const explanationText = escapeHtml(annotation.explanation || '');
     const escapedText = escapeHtml(text);
     
-    return `<span class="${classNames.trim()}" data-text="${escapeHtml(annotation.text)}" data-level="${level}" data-pos="${position}">${escapedText}<div class="tooltip"><div class="tooltip-title">${escapedText}</div><div class="explanation">${explanationText}</div>${questionsHtml}</div></span>`;
+    return `<span class="${classNames.trim()}" data-text="${escapeHtml(annotation.text)}" data-level="${level}" data-pos="${position}" onclick="toggleTooltip(event, this)">${escapedText}<div class="tooltip"><div class="tooltip-title">${escapedText}</div><div class="explanation">${explanationText}</div>${questionsHtml}</div></span>`;
+}
+
+// ツールチップの表示/非表示を切り替える関数
+function toggleTooltip(event, element) {
+    event.stopPropagation(); // イベントバブリングを停止
+    
+    // すでにアクティブなツールチップがある場合
+    if (activeTooltipElement && activeTooltipElement !== element) {
+        // 他のツールチップを閉じる
+        const tooltip = activeTooltipElement.querySelector('.tooltip');
+        if (tooltip) {
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.opacity = '0';
+            tooltip.style.pointerEvents = 'none';
+        }
+    }
+    
+    // 現在のツールチップを取得
+    const tooltip = element.querySelector('.tooltip');
+    if (!tooltip) return;
+    
+    // 現在のツールチップの状態を確認
+    const isVisible = tooltip.style.visibility === 'visible';
+    
+    if (isVisible) {
+        // ツールチップを非表示
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+        tooltip.style.pointerEvents = 'none';
+        activeTooltipElement = null;
+    } else {
+        // ツールチップを表示
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '1';
+        tooltip.style.pointerEvents = 'auto';
+        activeTooltipElement = element;
+        
+        // モバイルデバイスでのツールチップ位置調整
+        if (window.innerWidth <= 768) {
+            // ツールチップの位置を調整
+            const elementRect = element.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // 画面端に近い場合の位置調整
+            const tooltipWidth = parseInt(getComputedStyle(tooltip).width) || 250;
+            const elementCenterX = elementRect.left + (elementRect.width / 2);
+            
+            // 左端に近い場合
+            if (elementCenterX < tooltipWidth / 2 + 20) {
+                tooltip.style.left = '0';
+                tooltip.style.right = 'auto';
+                tooltip.style.transform = 'none';
+            } 
+            // 右端に近い場合
+            else if (viewportWidth - elementCenterX < tooltipWidth / 2 + 20) {
+                tooltip.style.left = 'auto';
+                tooltip.style.right = '0';
+                tooltip.style.transform = 'none';
+            } 
+            // 中央付近の場合
+            else {
+                tooltip.style.left = '50%';
+                tooltip.style.right = 'auto';
+                tooltip.style.transform = 'translateX(-50%)';
+            }
+        }
+    }
 }
 
 // 長文とアノテーションを表示する関数
@@ -179,6 +247,39 @@ function renderPassage() {
             console.log(`${word} 出現位置:`, [...elements].map(el => el.getAttribute('data-pos')));
         }
     });
+    
+    // ページの他の領域をクリックしたらツールチップを閉じる
+    document.addEventListener('click', function(event) {
+        if (activeTooltipElement && !activeTooltipElement.contains(event.target)) {
+            const tooltip = activeTooltipElement.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+                tooltip.style.pointerEvents = 'none';
+            }
+            activeTooltipElement = null;
+        }
+    });
+    
+    // ウィンドウサイズ変更時にアクティブなツールチップの位置を調整
+    window.addEventListener('resize', function() {
+        if (activeTooltipElement) {
+            const tooltip = activeTooltipElement.querySelector('.tooltip');
+            if (tooltip && tooltip.style.visibility === 'visible') {
+                // 擬似的にトグル操作を行い、位置を調整
+                toggleTooltip(new Event('resize'), activeTooltipElement);
+                toggleTooltip(new Event('resize'), activeTooltipElement);
+            }
+        }
+    });
+    
+    // タッチデバイス検出
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+    
+    // タッチデバイスの場合、文書にクラスを追加
+    if (isTouchDevice) {
+        document.body.classList.add('touch-device');
+    }
 }
 
 // テキストを解説付きで処理する関数
@@ -317,7 +418,12 @@ function splitIntoParagraphs(html) {
 }
 
 // 回答の表示/非表示を切り替える関数 (IDを受け取るように変更)
-function toggleAnswer(answerId) {
+function toggleAnswer(event, answerId) {
+    // イベントの伝播を停止
+    if (event) {
+        event.stopPropagation();
+    }
+
     const answerElement = document.getElementById(answerId);
     if (!answerElement) return; // 要素が見つからない場合は何もしない
 
@@ -331,6 +437,7 @@ function toggleAnswer(answerId) {
 
 // グローバルスコープで関数を利用できるようにする
 window.toggleAnswer = toggleAnswer;
+window.toggleTooltip = toggleTooltip;
 
 // ページ読み込み時に長文を表示
 document.addEventListener('DOMContentLoaded', () => {
